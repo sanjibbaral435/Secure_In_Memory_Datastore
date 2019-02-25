@@ -1,0 +1,51 @@
+@@grammar::DatavaultLanguage
+@@parseinfo :: True
+@@comments :: /\/\/.*/
+
+prog::Program = 'as' 'principal' user:p 'password' password:s 'do' command:cmd '***';
+cmd::Command =
+        | exit:'exit'
+        | return_:'return' command_expression:expr
+        | primitive_command:prim_cmd command:cmd
+        ;
+expr::Expression =
+        | exp_value_raw:value
+        | exp_value_list:'[]'
+        | '{' exp_value_object:fieldvals '}'
+        ;
+fieldvals::FieldValues =
+        | identifier:x '=' contains:value ',' rest:fieldvals
+        | identifier:x '=' contains:value
+        ;
+value::Value =
+        | raw_deep_identifier:x '.' raw_deeper_identifier:y
+        | raw_identifier:x
+        | raw_string:s
+        ;
+prim_cmd::PrimitiveCommand
+        =
+        | name:'create' name_ext:'principal' username:p password:s
+        | name:'change' name_ext:'password' username:p password:s
+        | name:'set' name_ext:'delegation' target:tgt source_user:q permission:right '->' user:p
+        | name:'set' identifier:x '=' expression:expr
+        | name:'append' name_ext:'to' identifier:x 'with' expression:expr
+        | name:'local' identifier:x '=' expression:expr
+        | name:'foreach' each:y 'in' identifier:x 'replacewith' expression:expr
+        | name:'delete' name_ext:'delegation' target:tgt source_user:q permission:right '->' user:p
+        | name:'default' name_ext:'delegator' '=' user:p
+        ;
+tgt =
+        | 'all'
+        | x;
+right::Permission =
+        | read:'read'
+        | write:'write'
+        | append:'append'
+        | delegate:'delegate'
+        ;
+s::str = /"[A-Za-z0-9_ ,;\.?!-]*"/;
+x::NoKwStr = /[A-Za-z][A-Za-z0-9_]*/;
+p::NoKwStr = /[A-Za-z][A-Za-z0-9_]*/;
+q::str = /[A-Za-z][A-Za-z0-9_]*/;
+r::str = /[A-Za-z][A-Za-z0-9_]*/;
+y::str = /[A-Za-z][A-Za-z0-9_]*/;
